@@ -1,22 +1,18 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import ContactsForm from './Contacts.tsx';
 import { ReactNode, useState } from 'react';
 import ProjectsFeed from './ProjectsFeed.tsx';
+import ContactsTab from './ContactsTab.tsx';
+import ProjectsTab from './ProjectsTab.tsx';
 
 const Card = () => {
   const [selectedTab, setSelectedTab] = useState<string>('contacts');
+
   return (
     <Stack>
       <Box>
-        {Object.entries(tabs).map((item, index) => {
-          const [key, tab] = item;
-
-          return (
-            <Button key={index} onClick={() => setSelectedTab(key)}>
-              <Typography textTransform="uppercase">{tab.alias}</Typography>
-            </Button>
-          );
-        })}
+        <ContactsTab tab={selectedTab} setTab={setSelectedTab} />
+        <ProjectsTab tab={selectedTab} setTab={setSelectedTab} />
       </Box>
       {tabs[selectedTab].component}
     </Stack>

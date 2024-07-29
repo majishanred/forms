@@ -19,6 +19,7 @@ import { StyledFormTab } from '../styled/StyledFormTab.tsx';
 
 const ContactsForm = () => {
   const contacts = useInfoStore((state) => state.contactsInfo);
+  const changing = contacts.changing;
   const changeContactsInfo = useInfoStore((state) => state.changeContactsInfo);
   const { control, handleSubmit } = useForm<ContactsInfo>({
     defaultValues: contacts.contactsInfo,
@@ -26,17 +27,20 @@ const ContactsForm = () => {
   });
 
   const onSubmit: SubmitHandler<ContactsFormFields> = (data) => {
-    console.log(data);
-    changeContactsInfo({ ...contacts, contactsInfo: data });
+    changeContactsInfo({ ...contacts, contactsInfo: data, changing: false, error: false });
+  };
+
+  const onInvalid = () => {
+    changeContactsInfo({ ...contacts, error: true, changing: true });
   };
 
   return (
-    <StyledForm noValidate onSubmit={handleSubmit(onSubmit)}>
+    <StyledForm noValidate onSubmit={handleSubmit(onSubmit, onInvalid)}>
       <StyledFromSection>
-        <StyledFormTab>
+        <StyledFormTab error={contacts.error}>
           <Box>
             <Typography padding="4px">Общая информация</Typography>
-            <Box display="flex" gap="16px" marginTop="24px">
+            <Box display="flex" gap="16px" marginTop="16px">
               <Controller
                 name="lastName"
                 control={control}
@@ -54,6 +58,7 @@ const ContactsForm = () => {
                         shrink: true,
                       }}
                       required
+                      disabled={!changing}
                     />
                     <FormHelperText error>{error?.message ?? ''}</FormHelperText>
                   </FormControl>
@@ -75,6 +80,7 @@ const ContactsForm = () => {
                         shrink: true,
                       }}
                       required
+                      disabled={!changing}
                     />
                     <FormHelperText error>{error?.message ?? ''}</FormHelperText>
                   </FormControl>
@@ -95,6 +101,7 @@ const ContactsForm = () => {
                       InputLabelProps={{
                         shrink: true,
                       }}
+                      disabled={!changing}
                     />
                     <FormHelperText error>{error?.message}</FormHelperText>
                   </FormControl>
@@ -102,9 +109,9 @@ const ContactsForm = () => {
               />
             </Box>
           </Box>
-          <Box marginTop="16px">
+          <Box>
             <Typography padding="4px">Контакты</Typography>
-            <Box display="flex" gap="16px" marginTop="24px">
+            <Box display="flex" gap="16px" marginTop="16px">
               <Controller
                 name="phoneNumber"
                 control={control}
@@ -121,6 +128,7 @@ const ContactsForm = () => {
                         shrink: true,
                       }}
                       required
+                      disabled={!changing}
                     />
                     <FormHelperText error>{error?.message}</FormHelperText>
                   </FormControl>
@@ -141,6 +149,7 @@ const ContactsForm = () => {
                       InputLabelProps={{
                         shrink: true,
                       }}
+                      disabled={!changing}
                     />
                     <FormHelperText error>{error?.message}</FormHelperText>
                   </FormControl>
@@ -148,9 +157,9 @@ const ContactsForm = () => {
               />
             </Box>
           </Box>
-          <Box marginTop="16px">
+          <Box>
             <Typography padding="4px">Другое</Typography>
-            <Box marginTop="16px">
+            <Box>
               <FormGroup>
                 <Controller
                   name="luboiDvij"
@@ -163,6 +172,7 @@ const ContactsForm = () => {
                         checked={value}
                         inputRef={ref}
                         onChange={onChange}
+                        disabled={!changing}
                       />
                       <FormHelperText error>{error?.message}</FormHelperText>
                     </>

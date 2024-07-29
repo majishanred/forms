@@ -13,49 +13,55 @@ import {
 } from '@mui/material';
 import StyledForm from '../styled/StyledForm.tsx';
 import { Delete } from '@mui/icons-material';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ProjectFormFields, projectSchema } from '../schemas/ProjectSchema.ts';
+import { projectSchema } from '../schemas/ProjectSchema.ts';
 import { Project, ProjectInfo } from '../types/Project.ts';
-import { useInfoStore } from '../stores/InfoStore.tsx';
 import { StyledFormTab } from '../styled/StyledFormTab.tsx';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useInfoStore } from '../stores/InfoStore.tsx';
 
 type ProjectFormProps = {
   project: Project;
-  projectNum: number;
 };
 
 const ProjectForm = ({ project }: ProjectFormProps) => {
-  const changing = project.changing;
   const changeProject = useInfoStore((state) => state.changeProject);
   const deleteProject = useInfoStore((state) => state.deleteProject);
-
-  const ref = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    console.log(ref.current.);
-  }, []);
-
+  const addSubmitHandler = useInfoStore((state) => state.addSubmitHandler);
+  const addError = useInfoStore((state) => state.addError);
   const { control, handleSubmit } = useForm<ProjectInfo>({
     defaultValues: project.projectInfo,
     resolver: zodResolver(projectSchema),
   });
 
-  const onSubmit: SubmitHandler<ProjectFormFields> = (data) => {
-    const newProj = { ...project, projectInfo: data };
-    changeProject(newProj);
-  };
+  const onSubmit = useCallback(
+    (data: ProjectInfo) => {
+      changeProject({ ...project, projectInfo: data, changing: false, error: false });
+    },
+    [changeProject, project],
+  );
+
+  const onInvalid = useCallback(() => {
+    changeProject({ ...project, changing: true, error: true });
+    addError(true);
+  }, [project, changeProject]);
+
+  const handler = handleSubmit(onSubmit, onInvalid);
+
+  useEffect(() => {
+    addSubmitHandler(handler);
+  }, [onInvalid, onSubmit]);
 
   return (
-    <StyledForm noValidate onSubmit={handleSubmit(onSubmit)} ref={ref}>
-      <StyledFormTab>
+    <StyledForm noValidate onSubmit={handler}>
+      <StyledFormTab error={project.error}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography padding="4px">Проект №{project.projectNumber}</Typography>
 
-          {changing && <Delete onClick={() => deleteProject(project)} />}
+          {project.changing && <Delete onClick={() => deleteProject(project)} />}
         </Box>
-        <Stack gap="24px" marginTop="24px">
+        <Stack gap="16px">
           <Controller
             name="name"
             control={control}
@@ -70,7 +76,7 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
                     shrink: true,
                   }}
                   required
-                  disabled={!changing}
+                  disabled={!project.changing}
                 />
                 <FormHelperText error>{error?.message}</FormHelperText>
               </FormControl>
@@ -93,7 +99,7 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
                   label="Навыки"
                   renderValue={(values) => values.map((selected) => <Chip label={selected} />)}
                   required
-                  disabled={!changing}
+                  disabled={!project.changing}
                 >
                   {skills.map((skill, index) => (
                     <MenuItem key={index} value={skill}>
@@ -110,7 +116,7 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
             render={({ field: { value, onChange }, fieldState: { error } }) => (
               <FormControl fullWidth required>
                 <InputLabel>Роль на проекте</InputLabel>
-                <Select label="Роль на проекте" value={value} onChange={onChange} required disabled={!changing}>
+                <Select label="Роль на проекте" value={value} onChange={onChange} required disabled={!project.changing}>
                   {roles.map((role, index) => (
                     <MenuItem key={index} value={role}>
                       <Typography>{role}</Typography>
@@ -136,7 +142,7 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
                       shrink: true,
                     }}
                     required
-                    disabled={!changing}
+                    disabled={!project.changing}
                   />
                   <FormHelperText error>{error?.message}</FormHelperText>
                 </FormControl>
@@ -155,7 +161,7 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
                     InputLabelProps={{
                       shrink: true,
                     }}
-                    disabled={!changing}
+                    disabled={!project.changing}
                   />
                   <FormHelperText error>{error?.message}</FormHelperText>
                 </FormControl>
@@ -164,12 +170,21 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
             />
           </Box>
         </Stack>
-        {changing ? (
+        {project.changing && (
           <Button type="submit" variant="contained" sx={{ marginLeft: 'auto' }}>
             Добавить
           </Button>
-        ) : (
-          <Button></Button>
+        )}
+        {!project.changing && (
+          <Button
+            variant="contained"
+            sx={{ marginLeft: 'auto' }}
+            onClick={() => {
+              changeProject({ ...project, changing: true, error: false });
+            }}
+          >
+            Редактировать
+          </Button>
         )}
       </StyledFormTab>
     </StyledForm>

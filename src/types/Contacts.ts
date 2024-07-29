@@ -10,4 +10,5 @@ export type ContactsInfo = {
 export type ContactsType = {
   contactsInfo: ContactsInfo;
   error: unknown;
+  changing: boolean;
 };

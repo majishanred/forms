@@ -10,13 +10,18 @@ const contactsDefaultValue: ContactsType = {
     phoneNumber: '',
     luboiDvij: true,
   },
+  changing: true,
   error: null,
 };
 
 type InfoStore = {
   contactsInfo: ContactsType;
-  projects: Project[];
-  projectsLength: number;
+  projectsInfo: {
+    projects: Project[];
+    projectsLength: number;
+    submitHandlers: any[];
+    errors: unknown[];
+  };
 };
 
 type Actions = {
@@ -24,6 +29,9 @@ type Actions = {
   addProject: () => void;
   changeProject: (project: Project) => void;
   deleteProject: (project: Project) => void;
+  saveAll: () => void;
+  addSubmitHandler: (handler: any) => void;
+  addError: (error: unknown) => void;
 };
 
 const defaultProject: Project = {
@@ -43,8 +51,12 @@ const defaultProject: Project = {
 export const useInfoStore = create<InfoStore & Actions>()(
   immer((set) => ({
     contactsInfo: contactsDefaultValue,
-    projects: [],
-    projectsLength: 0,
+    projectsInfo: {
+      projects: [],
+      projectsLength: 0,
+      errors: [],
+      submitHandlers: [],
+    },
     changeContactsInfo: (contacts: ContactsType) => {
       set((state) => {
         state.contactsInfo = contacts;
@@ -52,19 +64,40 @@ export const useInfoStore = create<InfoStore & Actions>()(
     },
     addProject: () => {
       set((state) => {
-        state.projectsLength = state.projectsLength + 1;
-        state.projects.push({ ...defaultProject, projectNumber: state.projectsLength, id: Date.now() });
+        state.projectsInfo.projectsLength += 1;
+        state.projectsInfo.projects.push({
+          ...defaultProject,
+          projectNumber: state.projectsInfo.projectsLength,
+          id: Date.now(),
+        });
       });
     },
     changeProject: (project: Project) => {
       set((state) => {
-        const projIndex = state.projects.findIndex((element) => element.id === project.id);
-        state.projects[projIndex] = project;
+        const projIndex = state.projectsInfo.projects.findIndex((item) => item.id === project.id);
+        state.projectsInfo.projects[projIndex] = project;
       });
     },
     deleteProject: (project: Project) => {
       set((state) => {
-        state.projects = state.projects.filter((item) => item.id !== project.id);
+        state.projectsInfo.projects = state.projectsInfo.projects.filter((item) => item.id !== project.id);
+      });
+    },
+    saveAll: () => {
+      set((state) =>
+        state.projectsInfo.submitHandlers.forEach((submitHandler) => {
+          submitHandler();
+        }),
+      );
+    },
+    addSubmitHandler: (handler) => {
+      set((state) => {
+        state.projectsInfo.submitHandlers.push(handler);
+      });
+    },
+    addError: (error) => {
+      set((state) => {
+        state.projectsInfo.errors.push(error);
       });
     },
   })),
