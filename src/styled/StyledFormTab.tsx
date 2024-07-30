@@ -1,5 +1,4 @@
-import { styled } from '@mui/material';
-import { Stack } from '@mui/material';
+import { styled, Stack } from '@mui/material';
 
 export const StyledFormTab = styled(Stack)<{ error: unknown }>`
   box-sizing: border-box;

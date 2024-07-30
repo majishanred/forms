@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { ContactsType } from '../types/Contacts.ts';
 import { Project } from '../types/Project.ts';
+import { BaseSyntheticEvent } from 'react';
 
 const contactsDefaultValue: ContactsType = {
   contactsInfo: {
@@ -19,8 +20,8 @@ type InfoStore = {
   projectsInfo: {
     projects: Project[];
     projectsLength: number;
-    submitHandlers: any[];
-    errors: unknown[];
+    submitHandlers: ((e?: BaseSyntheticEvent) => Promise<void>)[];
+    errors: number[];
   };
 };
 
@@ -30,8 +31,9 @@ type Actions = {
   changeProject: (project: Project) => void;
   deleteProject: (project: Project) => void;
   saveAll: () => void;
-  addSubmitHandler: (handler: any) => void;
-  addError: (error: unknown) => void;
+  addSubmitHandler: (handler: (e?: BaseSyntheticEvent) => Promise<void>) => void;
+  addError: (error: number) => void;
+  removeError: (error: number) => void;
 };
 
 const defaultProject: Project = {
@@ -97,7 +99,13 @@ export const useInfoStore = create<InfoStore & Actions>()(
     },
     addError: (error) => {
       set((state) => {
+        if (state.projectsInfo.errors.includes(error)) return;
         state.projectsInfo.errors.push(error);
+      });
+    },
+    removeError: (id: number) => {
+      set((state) => {
+        state.projectsInfo.errors = state.projectsInfo.errors.filter((error) => error !== id);
       });
     },
   })),

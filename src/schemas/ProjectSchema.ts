@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 export const projectSchema = z
   .object({
     name: z.string().trim().min(1, 'Обязательное поле'),
@@ -8,12 +7,18 @@ export const projectSchema = z
     beginDate: z.string().date(),
     endDate: z.string().date().optional(),
   })
-  .refine((arg) => {
+  .superRefine((arg, ctx) => {
     const { beginDate, endDate } = arg;
-    if (!endDate) return true;
-    if (new Date(endDate).getTime() < new Date(beginDate).getTime()) {
-      return false;
+    if (!endDate) {
+      return;
     }
-  }, 'Залупа');
+    if (new Date(endDate).getTime() < new Date(beginDate).getTime()) {
+      ctx.addIssue({
+        path: ['endDate'],
+        code: z.ZodIssueCode.custom,
+        message: 'Дата завершения не может быть раньше даты начала',
+      });
+    }
+  });
 
 export type ProjectFormFields = z.infer<typeof projectSchema>;

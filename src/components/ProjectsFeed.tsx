@@ -33,7 +33,7 @@ const ProjectsFeed = () => {
 const StyledGridContainer = styled(Box)`
   display: grid;
   grid-template-columns: repeat(2, 520px);
-  grid-auto-rows: max-content;
+  grid-auto-rows: minmax(384px, max-content);
 
   gap: 16px;
 `;
@@ -41,6 +41,7 @@ const StyledGridContainer = styled(Box)`
 const StyledAddButton = styled(Button)`
   font-size: 128px;
   font-weight: 200;
+  height: 100%;
 `;
 
 export default ProjectsFeed;

@@ -20,6 +20,7 @@ import { Project, ProjectInfo } from '../types/Project.ts';
 import { StyledFormTab } from '../styled/StyledFormTab.tsx';
 import { useCallback, useEffect } from 'react';
 import { useInfoStore } from '../stores/InfoStore.tsx';
+import { formatToDDMMYYYY, formatToZodDate } from '../utils/utils.ts';
 
 type ProjectFormProps = {
   project: Project;
@@ -30,6 +31,8 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
   const deleteProject = useInfoStore((state) => state.deleteProject);
   const addSubmitHandler = useInfoStore((state) => state.addSubmitHandler);
   const addError = useInfoStore((state) => state.addError);
+  const removeError = useInfoStore((state) => state.removeError);
+
   const { control, handleSubmit } = useForm<ProjectInfo>({
     defaultValues: project.projectInfo,
     resolver: zodResolver(projectSchema),
@@ -38,13 +41,14 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
   const onSubmit = useCallback(
     (data: ProjectInfo) => {
       changeProject({ ...project, projectInfo: data, changing: false, error: false });
+      removeError(project.id);
     },
     [changeProject, project],
   );
 
   const onInvalid = useCallback(() => {
     changeProject({ ...project, changing: true, error: true });
-    addError(true);
+    addError(project.id);
   }, [project, changeProject]);
 
   const handler = handleSubmit(onSubmit, onInvalid);
@@ -72,9 +76,6 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
                   placeholder="Название проекта"
                   value={value}
                   onChange={onChange}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
                   required
                   disabled={!project.changing}
                 />
@@ -97,7 +98,13 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
                   }}
                   ref={ref}
                   label="Навыки"
-                  renderValue={(values) => values.map((selected) => <Chip label={selected} />)}
+                  renderValue={(values) => (
+                    <Box display="flex" gap="8px">
+                      {values.map((value, index) => (
+                        <Chip key={index} label={value} />
+                      ))}
+                    </Box>
+                  )}
                   required
                   disabled={!project.changing}
                 >
@@ -134,13 +141,12 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
               render={({ field: { value, onChange }, fieldState: { error } }) => (
                 <FormControl>
                   <TextField
-                    value={value}
-                    onChange={onChange}
+                    value={formatToDDMMYYYY(value)}
+                    onChange={(e) => {
+                      onChange(formatToZodDate(e.target.value));
+                    }}
                     label="Начало работы"
                     placeholder="ДД.ММ.ГГГГ"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
                     required
                     disabled={!project.changing}
                   />
@@ -154,13 +160,12 @@ const ProjectForm = ({ project }: ProjectFormProps) => {
               render={({ field: { value, onChange }, fieldState: { error } }) => (
                 <FormControl>
                   <TextField
-                    value={value}
-                    onChange={onChange}
+                    value={formatToDDMMYYYY(value!)}
+                    onChange={(e) => {
+                      onChange(formatToZodDate(e.target.value));
+                    }}
                     label="Окончание работы"
                     placeholder="ДД.ММ.ГГГГ"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
                     disabled={!project.changing}
                   />
                   <FormHelperText error>{error?.message}</FormHelperText>
